@@ -7,6 +7,7 @@ This Flutter application demonstrates how to interact with OpenAI's ChatGPT API.
 - Send messages to ChatGPT and receive responses.
 - User-friendly interface with text input and a send button.
 - Displays ChatGPT's responses in the app.
+- Generate images using DALL-E's image generation API.
 
 ## Getting Started
 
@@ -44,6 +45,27 @@ Before running the app, you need to set up your OpenAI API key:
 - Enter a message in the text field.
 - Press the send button to submit the message to ChatGPT.
 - View ChatGPT's response in the app interface.
+- To generate an image, type "generate image" followed by your prompt (e.g., "generate image a cute cat").
+
+## Models
+
+The app uses two main model classes:
+
+### ChatCompletionResponse
+
+- Parses the JSON response from the ChatGPT API.
+- Contains fields like `id`, `object`, `created`, `model`, and `choices`.
+
+### ImageGenerationResult
+
+- Parses the JSON response from the DALL-E API.
+- Contains fields like `created` and `data`.
+
+## Libraries
+
+- `http`: For making API requests.
+- `json_annotation`: For JSON serialization.
+- `dash_chat_2`: For the chat UI interface.
 
 ## Acknowledgments
 - OpenAI for providing the ChatGPT API.
