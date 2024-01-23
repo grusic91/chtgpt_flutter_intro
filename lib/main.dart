@@ -21,21 +21,21 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const ChatGPTHome(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class ChatGPTHome extends StatefulWidget {
+  const ChatGPTHome({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<ChatGPTHome> createState() => _ChatGPTHomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _ChatGPTHomeState extends State<ChatGPTHome> {
   TextEditingController controller = TextEditingController();
   String results = "results to be shown here";
   bool _isLoading = false;
@@ -105,13 +105,26 @@ class _MyHomePageState extends State<MyHomePage> {
                 Row(
                   children: [
                     Expanded(
+                        child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(35),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
                         child: TextField(
-                      controller: controller,
-                      autocorrect: false,
-                      decoration:
-                          const InputDecoration(hintText: 'Type here...'),
+                          controller: controller,
+                          autocorrect: false,
+                          decoration:
+                              const InputDecoration(hintText: 'Type here...'),
+                        ),
+                      ),
                     )),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        shape: const CircleBorder(),
+                        padding: const EdgeInsets.all(20),
+                        backgroundColor: Colors.blue,
+                      ),
                       onPressed: _isLoading
                           ? null // Disable button when loading
                           : () async {
@@ -125,7 +138,10 @@ class _MyHomePageState extends State<MyHomePage> {
                                     Colors.purple),
                               ),
                             )
-                          : const Icon(Icons.send),
+                          : const Icon(
+                              Icons.send,
+                              color: Colors.white,
+                            ),
                     ),
                   ],
                 ),
