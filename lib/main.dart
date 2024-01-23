@@ -1,7 +1,9 @@
-import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
+import 'dart:convert';
+import 'package:chat_gpt_intro/models/chat_completion.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:chat_gpt_intro/sicret.dart';
 import 'package:flutter/material.dart';
-
-import 'sicret.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,21 +18,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
@@ -42,15 +29,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -60,60 +38,102 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController controller = TextEditingController();
   String results = "results to be shown here";
+  bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    final openAI = OpenAI.instance.build(
-        token: token,
-        baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 5)),
-        enableLog: true);
+  Future<void> completeWithHttp() async {
+    setState(() {
+      _isLoading = true;
+    });
+    var url = Uri.parse('https://api.openai.com/v1/chat/completions');
+    try {
+      var response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          "model": "gpt-3.5-turbo",
+          "max_tokens": 200,
+          "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": controller.text}
+          ]
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+
+        // Parse the JSON response into a ChatCompletionResponse object
+        ChatCompletionResponse chatResponse =
+            ChatCompletionResponse.fromJson(data);
+
+        // Access the choices and other data from the chatResponse object
+        results = chatResponse.choices.last.message.content;
+        setState(() {
+          results;
+        });
+      } else {
+        if (kDebugMode) {
+          print('Error: ${response.statusCode}');
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: SafeArea(
         child: Center(
-          // Center is a layout widget. It takes a single child and positions it
-          // in the middle of the parent.
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Expanded(child: Text(results)),
-              Row(
-                children: [
-                  Expanded(
-                      child: TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(hintText: 'Type here...'),
-                  )),
-                  ElevatedButton(
-                    onPressed: () {},
-                    child: const Icon(Icons.send),
-                  ),
-                ],
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Expanded(child: Text(results)),
+                Row(
+                  children: [
+                    Expanded(
+                        child: TextField(
+                      controller: controller,
+                      autocorrect: false,
+                      decoration:
+                          const InputDecoration(hintText: 'Type here...'),
+                    )),
+                    ElevatedButton(
+                      onPressed: _isLoading
+                          ? null // Disable button when loading
+                          : () async {
+                              await completeWithHttp();
+                            },
+                      child: _isLoading
+                          ? const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.purple),
+                              ),
+                            )
+                          : const Icon(Icons.send),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-      // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
