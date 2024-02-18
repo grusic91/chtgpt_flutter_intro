@@ -57,7 +57,6 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
   // Speach to Text
   final SpeechToText _speechToText = SpeechToText();
   bool _speechEnabled = false;
-  String _lastWords = '';
 
   void _stopListening() async {
     await _speechToText.stop();
