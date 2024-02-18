@@ -8,6 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:chat_gpt_intro/sicret.dart';
 import 'package:flutter/material.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 void main() {
   runApp(const MyApp());
@@ -52,8 +54,31 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
   );
   ChatUser openAiUser = ChatUser(id: "2", firstName: "ChatGPT");
 
+  // Speach to Text
+  final SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
+  String _lastWords = '';
+
+  void _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize();
+    setState(() {});
+  }
+
+  /// Each time to start a speech recognition session
+  void _startListening() async {
+    await _speechToText.listen(onResult: _onSpeechResult);
+    setState(() {});
+  }
+
+  /// This is the callback that the SpeechToText plugin calls when
+  /// the platform returns recognized words.
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    print(result.recognizedWords);
+  }
+
   // TTS
   late FlutterTts flutterTts;
+
   bool isTTS = true;
   bool get isIOS => !kIsWeb && Platform.isIOS;
 
@@ -65,6 +90,7 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
   void initState() {
     super.initState();
     flutterTts = FlutterTts();
+    _initSpeech();
   }
 
   Future<void> completeWithHttp() async {
@@ -261,6 +287,31 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
                         ),
                       ),
                     )),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        shape: const CircleBorder(),
+                        padding: const EdgeInsets.all(20),
+                        backgroundColor: Colors.black,
+                      ),
+                      onPressed: _isLoading
+                          ? null // Disable button when loading
+                          : () {
+                              _startListening();
+                            },
+                      child: _isLoading
+                          ? const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.purple),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.mic,
+                              color: Colors.white,
+                            ),
+                    ),
+                    const SizedBox(width: 10),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         shape: const CircleBorder(),

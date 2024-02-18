@@ -39,6 +39,7 @@ dependencies:
   http: ^1.2.0
   dash_chat_2: ^0.0.19
   flutter_tts: ^3.8.5
+  speech_to_text: ^6.6.0
 
 dev_dependencies:
   flutter_test:
