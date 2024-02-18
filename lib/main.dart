@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:chat_gpt_intro/models/chat_completion.dart';
 import 'package:chat_gpt_intro/models/image.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:http/http.dart' as http;
 import 'package:chat_gpt_intro/sicret.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +20,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Flutter ChatGPT Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -49,6 +51,21 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
     firstName: "Me",
   );
   ChatUser openAiUser = ChatUser(id: "2", firstName: "ChatGPT");
+
+  // TTS
+  late FlutterTts flutterTts;
+  bool isTTS = true;
+  bool get isIOS => !kIsWeb && Platform.isIOS;
+
+  bool get isAndroid => !kIsWeb && Platform.isAndroid;
+  bool get isWindows => !kIsWeb && Platform.isWindows;
+  bool get isWeb => kIsWeb;
+
+  @override
+  void initState() {
+    super.initState();
+    flutterTts = FlutterTts();
+  }
 
   Future<void> completeWithHttp() async {
     setState(() {
@@ -90,6 +107,22 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
             text: results,
           );
           messages.insert(0, msg);
+
+          // show message with TTS
+          await flutterTts.setSharedInstance(true);
+          await flutterTts.setIosAudioCategory(
+              IosTextToSpeechAudioCategory.playback,
+              [
+                IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+                IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+                IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+                IosTextToSpeechAudioCategoryOptions.defaultToSpeaker
+              ],
+              IosTextToSpeechAudioMode.defaultMode);
+
+          await flutterTts.setSpeechRate(.5);
+          await flutterTts.speak(results);
+
           setState(() {
             messages;
           });
@@ -149,7 +182,10 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
             )
           ]);
 
-          messages.insert(0, msg);
+          if (isTTS) {
+            messages.insert(0, msg);
+          }
+
           setState(() {
             messages;
           });
@@ -173,6 +209,27 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        backgroundColor: Colors.pink,
+        actions: [
+          InkWell(
+            onTap: () {
+              if (isTTS) {
+                isTTS = false;
+                flutterTts.stop();
+              } else {
+                isTTS = true;
+              }
+              setState(() {
+                isTTS;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child:
+                  Icon(isTTS ? Icons.record_voice_over : Icons.voice_over_off),
+            ),
+          )
+        ],
       ),
       body: SafeArea(
         child: Center(
