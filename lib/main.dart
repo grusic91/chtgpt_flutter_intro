@@ -59,6 +59,11 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
   bool _speechEnabled = false;
   String _lastWords = '';
 
+  void _stopListening() async {
+    await _speechToText.stop();
+    setState(() {});
+  }
+
   void _initSpeech() async {
     _speechEnabled = await _speechToText.initialize();
     setState(() {});
@@ -73,7 +78,15 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
   /// This is the callback that the SpeechToText plugin calls when
   /// the platform returns recognized words.
   void _onSpeechResult(SpeechRecognitionResult result) {
-    print(result.recognizedWords);
+    ChatMessage msg = ChatMessage(
+      user: userMe,
+      createdAt: DateTime.now(),
+      text: result.recognizedWords,
+    );
+    messages.insert(0, msg);
+    controller.text = result.recognizedWords;
+    _stopListening();
+    completeWithHttp();
   }
 
   // TTS
@@ -296,7 +309,7 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
                       onPressed: _isLoading
                           ? null // Disable button when loading
                           : () {
-                              _startListening();
+                              /*     _startListening(); */
                             },
                       child: _isLoading
                           ? const Padding(
