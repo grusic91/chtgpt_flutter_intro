@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io' show File, Platform;
 import 'package:chat_gpt_intro/models/chat_completion.dart';
 import 'package:chat_gpt_intro/models/image.dart';
-import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:dart_openai/dart_openai.dart' as dart_oai;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
