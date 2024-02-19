@@ -104,6 +104,8 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
   void initState() {
     super.initState();
     dart_oai.OpenAI.apiKey = token;
+    loadModels();
+
     flutterTts = FlutterTts();
     _initSpeech();
   }
@@ -423,5 +425,15 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
         messages;
       });
     }
+  }
+
+  void loadModels() async {
+    // here we can select and change models for chat gpt
+    List<dart_oai.OpenAIModelModel> models =
+        await dart_oai.OpenAI.instance.model.list();
+    dart_oai.OpenAIModelModel firstModel = models.first;
+    models.forEach((element) {
+      print(element.id);
+    });
   }
 }
