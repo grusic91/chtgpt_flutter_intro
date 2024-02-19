@@ -1,7 +1,10 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
+import 'dart:io' show File, Platform;
 import 'package:chat_gpt_intro/models/chat_completion.dart';
 import 'package:chat_gpt_intro/models/image.dart';
+import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
+import 'package:dart_openai/dart_openai.dart' as dart_oai;
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:http/http.dart' as http;
@@ -101,6 +104,7 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
   @override
   void initState() {
     super.initState();
+    dart_oai.OpenAI.apiKey = token;
     flutterTts = FlutterTts();
     _initSpeech();
   }
@@ -266,7 +270,18 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
               child:
                   Icon(isTTS ? Icons.record_voice_over : Icons.voice_over_off),
             ),
-          )
+          ),
+          InkWell(
+            onTap: () {
+              pickAudioFiles();
+            },
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Icon(
+                Icons.audiotrack,
+              ),
+            ),
+          ),
         ],
       ),
       body: SafeArea(
@@ -371,5 +386,43 @@ class _ChatGPTHomeState extends State<ChatGPTHome> {
         ),
       ),
     );
+  }
+
+  void pickAudioFiles() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['mp3'],
+    );
+
+    if (result != null) {
+      ChatMessage msg = ChatMessage(
+        user: userMe,
+        createdAt: DateTime.now(),
+        text: result.files.first.path!,
+      );
+      messages.insert(0, msg);
+      setState(() {
+        messages;
+      });
+
+      dart_oai.OpenAIAudioModel transcription =
+          await dart_oai.OpenAI.instance.audio.createTranscription(
+        file: File(result.files.first.path!),
+        model: "whisper-1",
+        responseFormat: dart_oai.OpenAIAudioResponseFormat.json,
+      );
+
+// print the transcription.
+
+      ChatMessage msg2 = ChatMessage(
+        user: userMe,
+        createdAt: DateTime.now(),
+        text: transcription.text,
+      );
+      messages.insert(0, msg2);
+      setState(() {
+        messages;
+      });
+    }
   }
 }

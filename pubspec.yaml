@@ -40,6 +40,8 @@ dependencies:
   dash_chat_2: ^0.0.19
   flutter_tts: ^3.8.5
   speech_to_text: ^6.6.0
+  file_picker: ^6.1.1
+  dart_openai: ^5.0.0
 
 dev_dependencies:
   flutter_test:
